@@ -1,59 +1,64 @@
-#include <iostream>
 #include <fstream>
-#include <vector>
-
-bool isLinear(const std::vector<int>& f, int n) {
-    int size = 1 << n;
-
-    if (f[0] != 0) return false;
-
-    std::vector<int> a(n);
-    for (int i = 0; i < n; ++i)
-        a[i] = f[1 << i];
-
-    for (int x = 0; x < size; ++x) {
-        int predicted = 0;
-        for (int i = 0; i < n; ++i)
-            if ((x >> i) & 1) predicted ^= a[i];
-
-        if (predicted != f[x])
-            return false;
+int main(int argc, char* argv[]) {
+    std::ifstream in(argv[1]);
+    int variables;
+    in >> variables;
+    in >> variables;
+    char temp;
+    in.get(temp);
+    int variants = 1 << variables;
+    bool *function = new bool[variants];
+    int zeros = 0; int one = 0;
+    for(int i = 0; i < variants; i++)
+    {
+        in.get(temp);
+        function[i] = temp-48;
+        if(function[i] == true) {
+            one++;
+        } else {
+            zeros++;
+        }
     }
-
-    return true;
-}
-
-int main() {
-    std::ifstream fin("input.txt");
-    std::ofstream fout("output.txt");
-
-    int k, n;
-    std::string s;
-    fin >> k >> n >> s;
-    fin.close();
-
-    bool result = false;
-
-    if (k == 2) {
-        int size = 1 << n;
-        if ((int)s.size() == size) {
-            std::vector<int> f(size);
-            bool valid_data = true;
-            for (int i = 0; i < size; ++i) {
-                if (s[i] != '0' && s[i] != '1') {
-                    valid_data = false;
-                    break;
-                }
-                f[i] = s[i] - '0';
-            }
-
-            if (valid_data) {
-                result = isLinear(f, n);
+    in.close();
+    std::ofstream out(argv[2]);
+    if(one == 0 || zeros == 0) {
+        out << '1';
+        delete[] function;
+        out.close();
+        return 0;
+    } else if (one != zeros) {
+        out << '0';
+        delete[] function;
+        out.close();
+        return 0;
+    }
+    int temp2 = 1;
+    for(int temp2 = 1; temp2 != variants; temp2=temp2<<1)
+    {
+        for(int i = temp2; i < variants; i+=temp2<<1)
+        {
+            for(int w = 0; w < temp2; w++)
+            {
+                function[i+w] = (function[i-temp2+w] != function[i+w]);
             }
         }
     }
-
-    fout << (result ? 1 : 0);
-    fout.close();
+    zeros = 1;
+    for(one = 1; one < variants; one++)
+    {
+        if(one == zeros && variants != zeros){
+            zeros = zeros << 1;
+        }
+        else if(function[one])
+        {
+            out << '0';
+            delete[] function;
+            out.close();
+            return 0;
+        }
+    }
+    out << '1';
+    delete[] function;
+    out.close();
     return 0;
 }
